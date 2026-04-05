@@ -112,6 +112,7 @@ import org.keycloak.storage.StoreSyncEvent;
 import org.keycloak.utils.GroupUtils;
 import org.keycloak.utils.ProfileHelper;
 import org.keycloak.utils.ReservedCharValidator;
+import org.keycloak.utils.SecurityHeadersValidator;
 import org.keycloak.utils.SMTPUtil;
 import org.keycloak.workflow.admin.resource.WorkflowsResource;
 
@@ -477,7 +478,11 @@ public class RealmAdminResource {
             ReservedCharValidator.validate(rep.getRealm());
             ReservedCharValidator.validateLocales(rep.getSupportedLocales());
             ReservedCharValidator.validateSecurityHeaders(rep.getBrowserSecurityHeaders());
+            SecurityHeadersValidator.validate(rep.getBrowserSecurityHeaders());
         } catch (ReservedCharValidator.ReservedCharException e) {
+            logger.error(e.getMessage(), e);
+            throw ErrorResponse.error(e.getMessage(), Status.BAD_REQUEST);
+        } catch (jakarta.ws.rs.BadRequestException e) {
             logger.error(e.getMessage(), e);
             throw ErrorResponse.error(e.getMessage(), Status.BAD_REQUEST);
         }

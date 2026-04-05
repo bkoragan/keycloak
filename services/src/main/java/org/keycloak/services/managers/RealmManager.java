@@ -76,6 +76,7 @@ import org.keycloak.sessions.AuthenticationSessionProvider;
 import org.keycloak.storage.StoreMigrateRepresentationEvent;
 import org.keycloak.storage.StoreSyncEvent;
 import org.keycloak.utils.ReservedCharValidator;
+import org.keycloak.utils.SecurityHeadersValidator;
 import org.keycloak.utils.SMTPUtil;
 import org.keycloak.utils.StringUtil;
 
@@ -598,6 +599,7 @@ public class RealmManager {
             ReservedCharValidator.validate(rep.getRealm());
             ReservedCharValidator.validateLocales(rep.getSupportedLocales());
             ReservedCharValidator.validateSecurityHeaders(rep.getBrowserSecurityHeaders());
+            SecurityHeadersValidator.validate(rep.getBrowserSecurityHeaders());
             SMTPUtil.checkSMTPConfiguration(session, rep.getSmtpServer());
             realm.setName(rep.getRealm());
 

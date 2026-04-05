@@ -1,4 +1,4 @@
-import { test } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { v4 as uuid } from "uuid";
 import adminClient from "../utils/AdminClient.ts";
 import { login } from "../utils/login.ts";
@@ -36,6 +36,62 @@ test.describe.serial("Security defenses", () => {
     await clickSaveSecurityDefenses(page);
     await assertNotificationMessage(page, "Realm successfully updated");
     await assertXFrameOptionsSecurityHeaderValue(page, "DENY");
+  });
+
+  test("X-Frame-Options rejects invalid value", async ({ page }) => {
+    await fillXFrameOptionsSecurityHeader(page, "INVALID_VALUE");
+    await clickSaveSecurityDefenses(page);
+    // Save button should remain enabled (form not submitted due to validation error)
+    await expect(
+      page.getByTestId("headers-form-tab-save"),
+    ).toBeEnabled();
+  });
+
+  test("X-Frame-Options accepts SAMEORIGIN", async ({ page }) => {
+    await fillXFrameOptionsSecurityHeader(page, "SAMEORIGIN");
+    await clickSaveSecurityDefenses(page);
+    await assertNotificationMessage(page, "Realm successfully updated");
+    await assertXFrameOptionsSecurityHeaderValue(page, "SAMEORIGIN");
+  });
+
+  test("X-Content-Type-Options rejects invalid value", async ({ page }) => {
+    await page
+      .getByTestId("browserSecurityHeaders.xContentTypeOptions")
+      .fill("invalid");
+    await clickSaveSecurityDefenses(page);
+    await expect(
+      page.getByTestId("headers-form-tab-save"),
+    ).toBeEnabled();
+  });
+
+  test("Strict-Transport-Security rejects missing max-age", async ({
+    page,
+  }) => {
+    await page
+      .getByTestId("browserSecurityHeaders.strictTransportSecurity")
+      .fill("includeSubDomains");
+    await clickSaveSecurityDefenses(page);
+    await expect(
+      page.getByTestId("headers-form-tab-save"),
+    ).toBeEnabled();
+  });
+
+  test("Referrer-Policy rejects invalid value", async ({ page }) => {
+    await page
+      .getByTestId("browserSecurityHeaders.referrerPolicy")
+      .fill("invalid-policy");
+    await clickSaveSecurityDefenses(page);
+    await expect(
+      page.getByTestId("headers-form-tab-save"),
+    ).toBeEnabled();
+  });
+
+  test("Referrer-Policy accepts valid value", async ({ page }) => {
+    await page
+      .getByTestId("browserSecurityHeaders.referrerPolicy")
+      .fill("strict-origin-when-cross-origin");
+    await clickSaveSecurityDefenses(page);
+    await assertNotificationMessage(page, "Realm successfully updated");
   });
 
   test("Brute force detection", async ({ page }) => {
